@@ -7,10 +7,16 @@ const morgan = require('morgan');
 //required for token and key set.
 const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
+
+//adding authorization
+const jwtAuthz = require('express-jwt-authz');
+
 // defining the Express app
 const app = express();
 
-// List of available Pizza (brief solution)
+// List of available Pizza (By default)
+//TODO: could be a MongoDB...
+
 const pizzas = [
     {pizza: 'Pizza Marinara', description: 'Features tomatoes, sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
     {pizza: 'Sicilian Pizza', description: 'Features tomatoes, sliced mozzarella, basil, and extra virgin olive oil.', price:'12'},
@@ -18,6 +24,11 @@ const pizzas = [
   ];
 //List of pizza orders.
 const orders = new Array();
+
+require('dotenv').config();
+if (!process.env.AUTH0_DOMAIN || !process.env.AUTH0_AUDIENCE) {
+  throw 'Make sure you have AUTH0_DOMAIN, and AUTH0_AUDIENCE in your .env file'
+}
 
 // adding Helmet to enhance your API's security
 app.use(helmet());
@@ -32,27 +43,22 @@ app.use(cors());
 app.use(morgan('combined'));
 
 
-// return all available pizzas
-  app.get('/', (req, res) => {
-    res.send(pizzas);
-  });
-
-/** rest api protected calls. **/
 const checkJwt = jwt({
     secret: jwksRsa.expressJwtSecret({
       cache: true,
       rateLimit: true,
       jwksRequestsPerMinute: 5,
-      jwksUri: `https://gaanva.auth0.com/.well-known/jwks.json`
+      jwksUri: 'https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json'
     }),
   
     // Validate the audience and the issuer.
-    audience: 'https://gaanva.auth0.com/api/v2/',
-    issuer: `https://gaanva.auth0.com/`,
+    audience: process.env.AUTH0_AUDIENCE,
+    issuer: 'https://${process.env.AUTH0_DOMAIN}/',
     algorithms: ['RS256']
   });
-  //securing the next REST API endpoint calls...
-  app.use(checkJwt);
+//setting authorization levels
+const checkScopes = jwtAuthz([ 'read:messages' ]);
+const checkScopesAdmin = jwtAuthz([ 'write:messages' ]);
 
 //customer request for a pizza order
 app.post('/order', (req, res) => {
@@ -61,12 +67,24 @@ app.post('/order', (req, res) => {
     res.send({message:'Pizza order successfully!'});
 });
 
-//consulting all orders.
-app.get('/orders', (req, res) => {
+// My public request... return all available pizzas
+app.get('/', (req, res) => {
+  res.send(pizzas);
+});
+//consulting orders made. TODO: We could receive user to extract only user orders...
+//read:message scope needed. 
+app.get('/orders', checkJwt, checkScopes, (req, res) => {
     res.send(orders);
+});
+//write:message scope needed...
+app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
+  //Creo una pizza nueva
+  this.pizzas.push(req.body);
+  res.status(201).send('pizza added succesfully!')
 });
 //TODO: deleting pizza order...
 //TODO: updating pizza order...  
+
 
 
 // starting the server
