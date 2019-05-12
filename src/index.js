@@ -18,9 +18,9 @@ const app = express();
 //TODO: could be a MongoDB...
 
 const pizzas = [
-    {pizza: 'Pizza Marinara', description: 'Features tomatoes, sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
-    {pizza: 'Sicilian Pizza', description: 'Features tomatoes, sliced mozzarella, basil, and extra virgin olive oil.', price:'12'},
-    {pizza: 'Greek Pizza', description: 'Features tomatoes, sliced mozzarella, basil, and extra virgin olive oil.', price:'15'}
+    {pizza: 'Pizza Marinara', description: 'Sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
+    {pizza: 'Sicilian Pizza', description: 'Features tomatoes, basil, and extra virgin olive oil.', price:'12'},
+    {pizza: 'Greek Pizza', description: 'Features tomatoes, sliced mozzarella, and extra virgin olive oil.', price:'15'}
   ];
 //List of pizza orders.
 const orders = new Array();
@@ -48,17 +48,17 @@ const checkJwt = jwt({
       cache: true,
       rateLimit: true,
       jwksRequestsPerMinute: 5,
-      jwksUri: 'https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json'
+      jwksUri: 'https://gaanva.auth0.com/.well-known/jwks.json'
     }),
   
     // Validate the audience and the issuer.
     audience: process.env.AUTH0_AUDIENCE,
-    issuer: 'https://${process.env.AUTH0_DOMAIN}/',
+    issuer: 'https://gaanva.auth0.com/',
     algorithms: ['RS256']
   });
 //setting authorization levels
-const checkScopes = jwtAuthz([ 'read:messages' ]);
-const checkScopesAdmin = jwtAuthz([ 'write:messages' ]);
+const checkScopes = jwtAuthz([ 'read:pizza' ]);
+const checkScopesAdmin = jwtAuthz([ 'create:pizza' ]);
 
 //customer request for a pizza order
 app.post('/order', (req, res) => {
@@ -79,8 +79,9 @@ app.get('/orders', checkJwt, checkScopes, (req, res) => {
 //write:message scope needed...
 app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
   //Creo una pizza nueva
-  this.pizzas.push(req.body);
-  res.status(201).send('pizza added succesfully!')
+  pizzas.push({pizza:req.body.pizza['pizza'], description:req.body.pizza['description'], price:req.body.pizza['price']});
+  
+  return res.status(201).json('Pizza ' + req.body.pizza['pizza'] + ' successfully created!');
 });
 //TODO: deleting pizza order...
 //TODO: updating pizza order...  
