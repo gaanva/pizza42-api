@@ -23,7 +23,7 @@ const pizzas = [
     {pizza: 'Greek Pizza', description: 'Features tomatoes, sliced mozzarella, and extra virgin olive oil.', price:'15'}
   ];
 //List of pizza orders.
-const orders = new Array();
+const orders = [];
 
 require('dotenv').config();
 if (!process.env.AUTH0_DOMAIN || !process.env.AUTH0_AUDIENCE) {
@@ -57,34 +57,46 @@ const checkJwt = jwt({
     algorithms: ['RS256']
   });
 //setting authorization levels
-const checkScopes = jwtAuthz([ 'read:pizza' ]);
-const checkScopesAdmin = jwtAuthz([ 'create:pizza' ]);
-
-//customer request for a pizza order
-app.post('/order', (req, res) => {
-    const order = req.body;
-    orders.push(order);
-    res.send({message:'Pizza order successfully!'});
-});
+const checkScopesUser = jwtAuthz(['read:pizza','read:myOrders']);
+const checkScopesAdmin = jwtAuthz(['read:pizza','create:pizza', 'read:orders', 'read:users']);
 
 // My public request... return all available pizzas
 app.get('/', (req, res) => {
   res.send(pizzas);
 });
-//consulting orders made. TODO: We could receive user to extract only user orders...
-//read:message scope needed. 
-app.get('/orders', checkJwt, checkScopes, (req, res) => {
-    res.send(orders);
+//consulting orders made.
+app.get('/orders', checkJwt, checkScopesAdmin, (req, res) => {
+    return res.status(200).json(this.orders);
 });
-//write:message scope needed...
+
+app.get('/myOrders', checkJwt, checkScopesUser, (req, res) => {
+  console.log('parameter received: ' + req.query.user_email);
+  var email = req.query.user_email
+  var userOrders = [];
+  //search for user orders
+  for(order in this.orders){
+    if(order.user_email==email){
+      userOrders.push(order);
+    }
+  }
+  return res.status(200).json(userOrders);
+});
+
 app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
   //Creo una pizza nueva
   pizzas.push({pizza:req.body.pizza['pizza'], description:req.body.pizza['description'], price:req.body.pizza['price']});
-  
   return res.status(201).json('Pizza ' + req.body.pizza['pizza'] + ' successfully created!');
 });
+
+//customer request for a pizza order
+app.post('/order', checkJwt, checkScopesUser, (req, res) => {
+  orders.push(req.body);
+  return res.status(201).json('Order successfully created!');
+});
+
 //TODO: deleting pizza order...
 //TODO: updating pizza order...  
+
 
 
 
