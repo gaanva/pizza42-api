@@ -32,6 +32,33 @@ app.use(bodyParser.json());
 app.use(morgan('combined'));
 
 
+var AuthenticationClient = require('auth0').AuthenticationClient;
+
+var auth0 = new AuthenticationClient({
+  domain: process.env.AUTH0_DOMAIN,
+  clientId: process.env.AUTH0_MNG_API_CLIENT_ID,
+  clientSecret: process.env.AUTH0_MNG_API_CLIENT_SECRET
+});
+var access_token;
+auth0.clientCredentialsGrant(
+  {
+    audience: process.env.AUTH0_MNG_API_AUDIENCE,
+    scope: 'read:users'
+  },
+  function(err, response) {
+    if (err) {
+      // Handle error.
+    }
+    console.log(response.access_token);
+    access_token = response.access_token;
+  }
+);
+
+var request = require("request");
+
+
+
+
 
 const pizzas = [
   {pizza: 'Pizza Marinara', description: 'Sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
@@ -64,7 +91,7 @@ app.get('/', (req, res) => {
 });
 //consulting orders made.
 app.get('/orders', checkJwt, checkScopesAdmin, (req, res) => {
-  console.log(orders);  
+  console.log(orders);
   return res.status(200).json(orders);
 });
 
@@ -97,6 +124,22 @@ app.post('/order', checkJwt, checkScopesUser, (req, res) => {
   orders.push(req.body.order);
   return res.status(201).json('Order successfully created!');
 });
+
+app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
+  var options = { method: 'GET',
+                  url: process.env.AUTH0_MNG_API_AUDIENCE+'users',
+                  headers: 
+                        { authorization: 'Bearer '+access_token,
+                          'content-type': 'application/json' } 
+                  };
+
+  request(options, function (error, response, body) {
+    if (error) throw new Error(error);
+    return res.status(200).json(body);
+  });
+  
+});
+
 
 //TODO: deleting pizza order...
 //TODO: updating pizza order...  
