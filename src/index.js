@@ -61,9 +61,9 @@ var request = require("request");
 
 
 const pizzas = [
-  {pizza: 'Pizza Marinara', description: 'Sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
-  {pizza: 'Sicilian Pizza', description: 'Features tomatoes, basil, and extra virgin olive oil.', price:'12'},
-  {pizza: 'Greek Pizza', description: 'Features tomatoes, sliced mozzarella, and extra virgin olive oil.', price:'15'}
+  {id:1, pizza: 'Pizza Marinara', description: 'Sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
+  {id:2, pizza: 'Sicilian Pizza', description: 'Features tomatoes, basil, and extra virgin olive oil.', price:'12'},
+  {id:3, pizza: 'Greek Pizza', description: 'Features tomatoes, sliced mozzarella, and extra virgin olive oil.', price:'15'}
 ];
 //List of pizza orders.
 const orders = [];
@@ -139,7 +139,6 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
   });
   
 });
-
 
 //TODO: deleting pizza order...
 //TODO: updating pizza order...  
