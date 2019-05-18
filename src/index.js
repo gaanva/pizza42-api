@@ -85,10 +85,7 @@ const checkJwt = jwt({
 const checkScopesUser = jwtAuthz(['read:pizza','read:myOrders'],{checkAllScopes: true});
 const checkScopesAdmin = jwtAuthz(['read:pizza','create:pizza', 'read:orders', 'read:users'], {checkAllScopes: true});
 
-// My public request... return all available pizzas
-app.get('/', (req, res) => {
-  res.send(pizzas);
-});
+
 //consulting orders made.
 app.get('/orders', checkJwt, checkScopesAdmin, (req, res) => {
   console.log(orders);
@@ -111,20 +108,47 @@ app.get('/myOrders', checkJwt, checkScopesUser, (req, res) => {
   return res.status(200).json(userOrders);
 });
 
+//>>>>>>>>>>>>>>>>>+Pizza Services+>>>>>>>>>>>>>>>>>
+// My public request... return all available pizzas
+app.get('/', (req, res) => {
+  res.send(pizzas);
+});
+//Create a new Pizza
 app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
-  //Creo una pizza nueva
-  pizzas.push({pizza:req.body.pizza['pizza'], description:req.body.pizza['description'], price:req.body.pizza['price']});
-  return res.status(201).json('Pizza ' + req.body.pizza['pizza'] + ' successfully created!');
+  let pizza = req.body.pizza;
+  //set the id
+  pizza.id = (Math.max(pizzas.map(pizzaStored => pizzaStored.id))+1);
+  //pizzas.push({pizza:pizza['pizza'], description:req.body.pizza['description'], price:req.body.pizza['price']});
+  pizzas.push(pizza);
+  return res.status(201).json('Pizza ' + pizza['pizza'] + ' successfully created!');
 });
 
+//Update a Pizza
+app.put('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
+  let pizzaUpdated = req.body.pizza;
+  pizzas.forEach(function(pizza, i){ if (pizza.id === pizzaUpdated.id) pizzas[i] = pizzaUpdated; });
+  return res.status(200).json('Pizza ' + pizzaUpdated + ' successfully updated!');
+});
+  
+//Delete a Pizza
+app.delete('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
+  let pizzaId = req.body.id;
+  pizzas.forEach(function(pizza, i){ if (pizza.id === pizzaId) pizzas.slice(i,1); });
+  return res.status(200).json('Pizza ' + pizzaId + ' successfully deleted!');
+});
+//<<<<<<<<<<<<<<<<<<+Pizza Services+<<<<<<<<<<<<<<<<
+
+//>>>>>>>>>>>>>>>>>+Order Services+>>>>>>>>>>>>>>>>>
 //customer request for a pizza order
 app.post('/order', checkJwt, checkScopesUser, (req, res) => {
   console.log('oder recieved: ');
-  console.log(req.body.order);
   orders.push(req.body.order);
   return res.status(201).json('Order successfully created!');
 });
 
+//<<<<<<<<<<<<<<<<<<+Order Services+<<<<<<<<<<<<<<<<
+
+//>>>>>>>>>>>>>>>>>+Users profile list+>>>>>>>>>>>>>>>>>
 app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
   var options = { method: 'GET',
                   url: process.env.AUTH0_MNG_API_AUDIENCE+'users',
@@ -139,9 +163,7 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
   });
   
 });
-
-//TODO: deleting pizza order...
-//TODO: updating pizza order...  
+//<<<<<<<<<<<<<<<<<<+Users profile list+<<<<<<<<<<<<<<<<v
 
 // starting the server
 app.listen(3001, () => {
