@@ -49,7 +49,6 @@ auth0.clientCredentialsGrant(
     if (err) {
       // Handle error.
     }
-    console.log(response.access_token);
     access_token = response.access_token;
   }
 );
