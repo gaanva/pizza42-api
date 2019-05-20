@@ -115,11 +115,13 @@ app.get('/', (req, res) => {
 //Create a new Pizza
 app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
   let pizza = req.body.pizza;
+  console.log('pizza received to be create: ');
+  console.log(pizza);
   //set the id
-  pizza.id = (Math.max(pizzas.map(pizzaStored => pizzaStored.id))+1);
+  pizza.id = (Math.max(...pizzas.map(pizzaStored => pizzaStored.id))+1);
   //pizzas.push({pizza:pizza['pizza'], description:req.body.pizza['description'], price:req.body.pizza['price']});
   pizzas.push(pizza);
-  return res.status(201).json('Pizza ' + pizza['pizza'] + ' successfully created!');
+  return res.status(201).json(pizza);
 });
 
 //Update a Pizza
@@ -132,7 +134,11 @@ app.put('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
 //Delete a Pizza
 app.delete('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
   let pizzaId = req.body.id;
-  pizzas.forEach(function(pizza, i){ if (pizza.id === pizzaId) pizzas.slice(i,1); });
+  pizzas.forEach(function(pizza, i){ 
+    if (pizza.id === pizzaId){ 
+      pizzas.splice(i,1); 
+    }
+  });
   return res.status(200).json('Pizza ' + pizzaId + ' successfully deleted!');
 });
 //<<<<<<<<<<<<<<<<<<+Pizza Services+<<<<<<<<<<<<<<<<
