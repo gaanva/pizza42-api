@@ -126,8 +126,13 @@ app.post('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
 
 //Update a Pizza
 app.put('/pizza', checkJwt, checkScopesAdmin, (req, res)=>{
-  let pizzaUpdated = req.body.pizza;
-  pizzas.forEach(function(pizza, i){ if (pizza.id === pizzaUpdated.id) pizzas[i] = pizzaUpdated; });
+  let pizzaUpdated = req.body;
+  console.log(req.body);
+  pizzas.forEach(function(pizza, i){ 
+    if (pizza.id === pizzaUpdated.id){
+      pizzas[i] = pizzaUpdated;
+    }  
+  });
   return res.status(200).json('Pizza ' + pizzaUpdated + ' successfully updated!');
 });
   
