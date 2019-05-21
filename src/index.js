@@ -85,12 +85,12 @@ const checkScopesUser = jwtAuthz(['read:pizza','read:myOrders'],{checkAllScopes:
 const checkScopesAdmin = jwtAuthz(['read:pizza','create:pizza', 'read:orders', 'read:users'], {checkAllScopes: true});
 
 
-//consulting orders made.
+//request for all orders made.
 app.get('/orders', checkJwt, checkScopesAdmin, (req, res) => {
   console.log(orders);
   return res.status(200).json(orders);
 });
-
+//request a user orders made
 app.get('/myOrders', checkJwt, checkScopesUser, (req, res) => {
   console.log('parameter received: ' + req.query.user_email);
   var email = req.query.user_email
@@ -169,7 +169,47 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
 
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
-    return res.status(200).json(body);
+    var userOrders=[];
+    var users = JSON.parse(response.body);
+    
+    var frontEndUsers = [];
+    //store users attributes.
+    
+    for(var j=0; j<users.length; j++){
+      
+      for(var i=0; i<orders.length; i++){
+        if(orders[i].user_mail===users[j].email){
+          console.log('order user email match!');
+          userOrders.push(orders[i]);
+        }
+      }
+      
+      
+      var connections;
+
+      //se how to add to the rule
+      if(users[j].identities.length>1){
+        connections = users[j].identities[0].provider + " // " + users[j].identities[1].provider;
+      }else{
+        connections = users[j].identities[0].provider
+      }
+
+      var gender = 'not informed';
+      if(users[j].user_metadata && users[j].user_metadata.fullcontact && users[j].user_metadata.fullcontact.gender){
+          gender = users[j].user_metadata.fullcontact.gender;
+      }
+
+      frontEndUsers.push({
+                            "email":users[j].email, 
+                            "name":users[j].name, 
+                            "gender":gender, 
+                            "nickname":users[j].nickname,
+                            "connections":connections, 
+                            "logins_count":users[j].logins_count,
+                            "orders_created":userOrders.length});
+    }
+    //for securoty reasons only return specific data...
+    return res.status(200).json(frontEndUsers);
   });
   
 });
