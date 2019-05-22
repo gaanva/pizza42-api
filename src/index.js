@@ -16,7 +16,7 @@ if (!process.env.AUTH0_DOMAIN || !process.env.AUTH0_AUDIENCE) {
 }
 
 const corsOptions =  {
-  origin: 'http://localhost:3000'
+  origin: 'http://3.14.88.49:3000'
 };
 // enabling CORS for all requests
 app.use(cors(corsOptions));
