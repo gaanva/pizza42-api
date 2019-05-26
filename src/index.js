@@ -207,6 +207,8 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
                             "connections":connections, 
                             "logins_count":users[j].logins_count,
                             "orders_created":userOrders.length});
+      
+      userOrders = [];
     }
     //for securoty reasons only return specific data...
     return res.status(200).json(frontEndUsers);
