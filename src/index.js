@@ -196,7 +196,6 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
     //store users attributes.
     
     for(var j=0; j<users.length; j++){
-      
       for(var i=0; i<orders.length; i++){
         if(orders[i].user_mail===users[j].email){
           console.log('order user email match!');
@@ -219,12 +218,24 @@ app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
           gender = users[j].user_metadata.fullcontact.gender;
       }
 
+      var googleLogins = 0;
+      var usrPwdLogins = 0;
+      if(users[j].user_metadata && users[j].user_metadata.countGoogleLogins){
+        googleLogins =  users[j].user_metadata.countGoogleLogins;
+      }
+
+      if(users[j].user_metadata && users[j].user_metadata.countUsrPwdLogins){
+        usrPwdLogins = users[j].user_metadata.countUsrPwdLogins;
+      }
+
       frontEndUsers.push({
                             "email":users[j].email, 
                             "name":users[j].name, 
                             "gender":gender, 
                             "nickname":users[j].nickname,
                             "connections":connections, 
+                            "google_logins":googleLogins,
+                            "usrPwd_logins":usrPwdLogins,
                             "logins_count":users[j].logins_count,
                             "orders_created":userOrders.length});
     }
