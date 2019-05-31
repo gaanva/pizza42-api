@@ -39,25 +39,8 @@ var auth0 = new AuthenticationClient({
   clientId: process.env.AUTH0_MNG_API_CLIENT_ID,
   clientSecret: process.env.AUTH0_MNG_API_CLIENT_SECRET
 });
-var access_token;
-auth0.clientCredentialsGrant(
-  {
-    audience: process.env.AUTH0_MNG_API_AUDIENCE,
-    scope: 'read:users'
-  },
-  function(err, response) {
-    if (err) {
-      // Handle error.
-    }
-    access_token = response.access_token;
-  }
-);
 
 var request = require("request");
-
-
-
-
 
 const pizzas = [
   {id:1, pizza: 'Pizza Marinara', description: 'Sliced mozzarella, basil, and extra virgin olive oil.', price:'10'},
@@ -158,8 +141,44 @@ app.post('/order', checkJwt, checkScopesUser, (req, res) => {
 
 //<<<<<<<<<<<<<<<<<<+Order Services+<<<<<<<<<<<<<<<<
 
+//request access token for requesting AUTH0 MNG API info.
+
+
+//>>>>>>>>>>>>>>>>>+Requesting token to call AUTH0_MNG_API+>>>>>>>>>>>>>>>>>
+var access_token;
+var expiresAt;
+//Request token for access the AUTH0MNG API info.
+function requestAPIToken(){
+  auth0.clientCredentialsGrant(
+  {
+    audience: process.env.AUTH0_MNG_API_AUDIENCE,
+    scope: 'read:users'
+  },
+  function(err, response) {
+    if (err) {
+      // Handle error.
+      console.log(err);
+    }
+    access_token = response.access_token;
+    expiresAt = (response.expires_in * 1000) + Date.now();
+    console.log(expiresAt);
+
+    return response;
+  }
+  );
+}
+console.log('access token request:');
+requestAPIToken();
+
 //>>>>>>>>>>>>>>>>>+Users profile list+>>>>>>>>>>>>>>>>>
 app.get('/usersListInformation', checkJwt, checkScopesAdmin, (req, res) => {
+  console.log('user list information ' +access_token);
+  if(!access_token || Date.now() > expiresAt){
+    requestAPIToken();
+    console.log('got the token!');
+  }else{
+    console.log('using requested token...');
+  }
   var options = { method: 'GET',
                   url: process.env.AUTH0_MNG_API_AUDIENCE+'users',
                   headers: 
